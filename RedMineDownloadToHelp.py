@@ -91,10 +91,17 @@ def ProcessDescription(downloadDirectory, description):
                 print(f'{Fore.WHITE}{htmlRow}')
 
             colList = row.xpath(".//th")  # все столбцы строки
-            Article = ""
+            if len(colList) == 0:
+                colList = row.xpath(".//td")  # все столбцы строки
 
+            Article = ""
             if len(colList) > 0:
                 Article = html.tostring(colList[0], encoding='unicode')
+                Article = Article.strip('\n')
+                Article = Article.strip('\r')
+                Article = Article.strip('\t')
+                if logOn:
+                    print(f'{Article=}')
 
             # 2 Проверка шапки таблицы на наличие в первом столбце HelpID
             if rInd == 1:
@@ -103,24 +110,27 @@ def ProcessDescription(downloadDirectory, description):
                 if Article.find("HelpID") > 0:
                     isSkip = False
             if isSkip:
+                print(f'{Fore.RED}Первый солбец перой строки не HelpID')
                 break
 
             # 3 Разбиваем таблицу построчно по наличию HelpID и записываем в файл
             if rInd > 1:
-                content = f'<html>\n'
-                content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
-                content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n</body>\n</html>'
-                # content = f'<html><body><table style="width: 80%; border=".5">\n<tbody>\n{htmlRow}\n</tbody>\n</table></body></html>'
-                content = ClearDescription(content)
-                exportFileName = os.path.join(downloadDirectory, f'Article{rInd}.html')
-                WriteHtml(content, exportFileName)
-
-    #
-    # txt_link = html.tostring(link_tablebg, encoding='unicode')
-    # print(f'{Fore.WHITE}{htmlTablest}')
-    # print(f'{Fore.WHITE}{rowList}')
-    # exportFileName = os.path.join(downloadDirectory, f'Issue.html')
-    # WriteHtml(description, exportFileName)
+                dgt = re.findall('(\d+)', Article)
+                ArticleId = ""
+                if len(dgt) > 0:
+                    ArticleId = dgt[0]
+                    if logOn:
+                        print(f'{ArticleId=}')
+                if ArticleId.isdigit():
+                    ArticleFle = f'Article{ArticleId}.html'
+                    content = f'<html>\n'
+                    content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
+                    content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n</body>\n</html>'
+                    content = ClearDescription(content)
+                    exportFileName = os.path.join(downloadDirectory, ArticleFle)
+                    WriteHtml(content, exportFileName)
+                else:
+                    print(f'{Fore.RED}HelpID не число')
 
 
 def main():
@@ -187,4 +197,4 @@ if __name__ == "__main__":
     else:
         print(f'{Fore.RED}Pleas edit default Config value: {Fore.BLUE}{configFilePath}')
         print(f'{Fore.CYAN}Process completed, press Space...')
-        # keyboard.wait("space")
+        keyboard.wait("space")
