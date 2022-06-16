@@ -1,6 +1,7 @@
 import configparser
 import os
 import re
+from lxml import html
 
 import keyboard
 import requests  # request img from web
@@ -47,27 +48,79 @@ def ReadConfig(filepath):
 # Write html
 def WriteHtml(description, filename):
     print(f'{Fore.YELLOW}File save as: {filename}')
-    with open(filename, 'a', encoding='utf-8') as f:
+    with open(filename, 'w', encoding='utf-8') as f:
         f.write(f"{description}")
 
 
-#  1) Delete empty string
-#  2) LowDown <hX> on 1 livel
-def EditBlock(curblok):
+#  Delete empty string
+def ClearDescription(description):
     sresult = ""
-    for curstr in curblok.split('\n'):
+    for curstr in description.split('\n'):
         if curstr.strip() != '':
-            hlist = re.findall(r'<h\d*', curstr)
-            if len(hlist) > 0:
-                hitem = hlist[0].replace("<h", "").strip()
-                try:
-                    newhitem = int(hitem) + 1
-                    curstr = curstr.replace(f"<h{hitem}", f"<h{newhitem}").replace(f"/h{hitem}>", f"/h{newhitem}>")
-                except:
-                    curstr = curstr
+            curstr = curstr.strip('\n')
+            curstr = curstr.strip('\r')
+            curstr = curstr.strip('\t')
             sresult = sresult + curstr + '\n'
-
     return sresult
+
+
+#  Get table and create file
+def ProcessDescription(downloadDirectory, description):
+    description = ClearDescription(description)
+    description = f'<html><body>{description}</body></html>'
+
+    # 1 Получаем таблицы
+    htmlContent = html.fromstring(description)
+    tables = htmlContent.xpath(".//table")  # таблицы документа
+    for table in tables:
+        if logOn:
+            htmlTablest = html.tostring(table, encoding='unicode')
+            print(f'{Fore.RED}------------------TABLE------------------------')
+            print(f'{Fore.WHITE}{htmlTablest}')
+
+        rowList = table.xpath(".//tr")  # строки таблицы
+        rInd = 0
+        isSkip: bool = True
+
+        for row in rowList:
+            rInd = rInd + 1
+            htmlRow = html.tostring(row, encoding='unicode')
+
+            if logOn:
+                print(f'{Fore.RED}------------------ROW {rInd}------------------------')
+                print(f'{Fore.WHITE}{htmlRow}')
+
+            colList = row.xpath(".//th")  # все столбцы строки
+            Article = ""
+
+            if len(colList) > 0:
+                Article = html.tostring(colList[0], encoding='unicode')
+
+            # 2 Проверка шапки таблицы на наличие в первом столбце HelpID
+            if rInd == 1:
+                if logOn:
+                    print(f'{Article}')
+                if Article.find("HelpID") > 0:
+                    isSkip = False
+            if isSkip:
+                break
+
+            # 3 Разбиваем таблицу построчно по наличию HelpID и записываем в файл
+            if rInd > 1:
+                content = f'<html>\n'
+                content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
+                content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n</body>\n</html>'
+                # content = f'<html><body><table style="width: 80%; border=".5">\n<tbody>\n{htmlRow}\n</tbody>\n</table></body></html>'
+                content = ClearDescription(content)
+                exportFileName = os.path.join(downloadDirectory, f'Article{rInd}.html')
+                WriteHtml(content, exportFileName)
+
+    #
+    # txt_link = html.tostring(link_tablebg, encoding='unicode')
+    # print(f'{Fore.WHITE}{htmlTablest}')
+    # print(f'{Fore.WHITE}{rowList}')
+    # exportFileName = os.path.join(downloadDirectory, f'Issue.html')
+    # WriteHtml(description, exportFileName)
 
 
 def main():
@@ -85,7 +138,6 @@ def main():
     indx = 0
 
     for curId in idList:
-        print(f'{curId=}')
         if curId != "":
             indx = indx + 1
             print(f'{Fore.GREEN}Process {indx}: {curId=}')
@@ -96,27 +148,20 @@ def main():
                 # 1 Get RedMine Issue Description
                 issue = redmine.issue.get(curId, include=[])
                 issueDescription = issue.description
+                ProcessDescription(downloadDirectory, issueDescription)
 
-                print()
-
-                exportfilename = os.path.join(downloadDirectory, f'Issue - {curId}.html')
-                WriteHtml(issueDescription, exportfilename)
             else:
                 print(f'Get RedMine Wiki Description: {curId=}')
 
                 wikiId = curId.split('/')
                 if len(wikiId) == 3:
-                    projectid = wikiId[0]
-                    wikiname = wikiId[2]
+                    projectId = wikiId[0]
+                    wikiName = wikiId[2]
 
                     # 1 Get RedMine Wiki Description
-                    wiki = redmine.wiki_page.get(wikiname, project_id=projectid, include=[])
+                    wiki = redmine.wiki_page.get(wikiName, project_id=projectId, include=[])
                     wikiDescription = wiki.text
-
-                    print()
-
-                    exportfilename = os.path.join(downloadDirectory, f'Wiki - {wikiname}.html')
-                    WriteHtml(wikiDescription, exportfilename)
+                    ProcessDescription(downloadDirectory, wikiDescription)
                 else:
                     print(f"Skip wiki {wikiId=}")
 
@@ -129,16 +174,17 @@ def main():
 if __name__ == "__main__":
     print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
     print(f"{Fore.CYAN}Convert table to *.html")
-
+    global logOn
+    logOn = True
     currentDirectory = os.getcwd()
-    configfilepath = os.path.join(currentDirectory, 'config.cfg')
+    configFilePath = os.path.join(currentDirectory, 'config.cfg')
 
-    if ReadConfig(configfilepath):
+    if ReadConfig(configFilePath):
         idList = glid.split(';')
         print(f'{idList=}')
 
         main()
     else:
-        print(f'{Fore.RED}Pleas edit default Config value: {Fore.BLUE}{configfilepath}')
+        print(f'{Fore.RED}Pleas edit default Config value: {Fore.BLUE}{configFilePath}')
         print(f'{Fore.CYAN}Process completed, press Space...')
-        keyboard.wait("space")
+        # keyboard.wait("space")
