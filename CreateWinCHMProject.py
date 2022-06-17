@@ -67,7 +67,7 @@ def main():
         f.write(f"TitleList.Expanded.{ind}=0\n")
         f.write(f"TitleList.Kind.{ind}=2\n")
 
-    # 4 Исправление количества секций
+    # 4 Исправление количества секций ([TOPICS]) для полного отображения
     prjFileT = os.path.join(projectDirectory, "help.tmp")
     with open(prjFile, 'r', encoding='utf-16') as f1, open(prjFileT, 'w', encoding='utf-16') as f2:
         lines = f1.readlines()
