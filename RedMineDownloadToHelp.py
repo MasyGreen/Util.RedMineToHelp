@@ -90,7 +90,7 @@ def ProcessDescription(downloadDirectory, description):
         rowList = table.xpath(".//tr")  # строки таблицы
         rInd = 0
         isSkip: bool = True
-
+        headRow ="" #  Заголовок таблицы
         for row in rowList:
             rInd = rInd + 1
             htmlRow = html.tostring(row, encoding='unicode')
@@ -118,6 +118,7 @@ def ProcessDescription(downloadDirectory, description):
                     print(f'{Article}')
                 if Article.find("HelpID") > 0:
                     isSkip = False
+                    headRow = htmlRow
             if isSkip:
                 print(f'{Fore.RED}Первый солбец перой строки не HelpID')
                 break
@@ -135,7 +136,7 @@ def ProcessDescription(downloadDirectory, description):
                     content = f'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n'
                     content = f'{content}\n<head><title>{ArticleId}</title>\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n</head>'
                     content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
-                    content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n'
+                    content = f'{content}\n<table width="80%">\n<tbody>\n{headRow}\n{htmlRow}\n</tbody>\n</table>\n'
                     content = f'{content}\n</body>\n</html>'
                     content = ClearDescription(content)
                     exportFileName = os.path.join(downloadDirectory, ArticleFle)
