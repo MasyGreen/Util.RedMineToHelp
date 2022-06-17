@@ -14,5 +14,7 @@ Include/
 Lib/
 Scripts/
 Dowload
+HelpCHM
+WinCHM_Project
 pyvenv.cfg
 config.cfg

@@ -28,6 +28,14 @@ def ReadConfig(filepath):
         global glid
         glid = config.has_option("Settings", "id") and config.get("Settings", "id") or None
 
+        global logOn
+        str = config.has_option("Settings", "logon") and config.get("Settings", "logon") or None
+        logOn = False
+
+        if str is not None:
+            if str == '1' or str.lower() == 'true':
+                logOn = True
+
         return True
     else:
         print(f'{Fore.YELLOW}Start create config')
@@ -37,6 +45,7 @@ def ReadConfig(filepath):
         config.set("Settings", "host", 'http://192.168.1.1')
         config.set("Settings", "apikey", 'dq3inqgnqe8igqngninkkvekmviewrgir9384')
         config.set("Settings", "id", '1677;318;id103/wiki/Help2')
+        config.set("Settings", "logon", 'False')
 
         with open(filepath, "w") as config_file:
             config.write(config_file)
@@ -123,14 +132,16 @@ def ProcessDescription(downloadDirectory, description):
                         print(f'{ArticleId=}')
                 if ArticleId.isdigit():
                     ArticleFle = f'Article{ArticleId}.html'
-                    content = f'<html>\n'
+                    content = f'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n'
+                    content = f'{content}\n<head><title>{ArticleId}</title>\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n</head>'
                     content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
-                    content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n</body>\n</html>'
+                    content = f'{content}\n<table width="80%">\n<tbody>\n{htmlRow}\n</tbody>\n</table>\n'
+                    content = f'{content}\n</body>\n</html>'
                     content = ClearDescription(content)
                     exportFileName = os.path.join(downloadDirectory, ArticleFle)
                     WriteHtml(content, exportFileName)
                 else:
-                    print(f'{Fore.RED}HelpID не число')
+                    print(f'{Fore.RED}HelpID не число, ({Article})')
 
 
 def main():
@@ -184,8 +195,7 @@ def main():
 if __name__ == "__main__":
     print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
     print(f"{Fore.CYAN}Convert table to *.html")
-    global logOn
-    logOn = True
+
     currentDirectory = os.getcwd()
     configFilePath = os.path.join(currentDirectory, 'config.cfg')
 
