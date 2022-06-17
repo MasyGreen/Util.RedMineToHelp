@@ -1,14 +1,8 @@
 import shutil
-import configparser
 import os
-import re
-from lxml import html
 
 import keyboard
-import requests  # request img from web
-from bs4 import BeautifulSoup
 from colorama import Fore
-from redminelib import Redmine
 
 
 def main():
@@ -17,13 +11,13 @@ def main():
     downloadDirectory = os.path.join(currentDirectory, "Dowload")
     print(f'{Fore.CYAN}{downloadDirectory=}')
     if not os.path.exists(downloadDirectory):
-        print(f'{Fore.RED}Folder {downloadDirectory}not found')
+        print(f'{Fore.RED}Folder {downloadDirectory} not found')
         exit(0)
 
     templateDirectory = os.path.join(currentDirectory, "Template")
     print(f'{Fore.CYAN}{templateDirectory=}')
     if not os.path.exists(templateDirectory):
-        print(f'{Fore.RED}Folder {templateDirectory}not found')
+        print(f'{Fore.RED}Folder {templateDirectory} not found')
         exit(0)
 
     projectDirectory = os.path.join(currentDirectory, "WinCHM_Project")
@@ -44,17 +38,19 @@ def main():
         f.write(f"\n")
         for file in os.listdir(downloadDirectory):
             if file.startswith("Article"):
-                 f.write(f"TitleList.Title.{ind}=100002{ind}\n")
-                 f.write(f"TitleList.Level.{ind}=1\n")
-                 f.write(f"TitleList.Url.{ind}={file}\n")
-                 f.write(f"TitleList.Icon.{ind}=0\n")
-                 f.write(f"TitleList.Status.{ind}=0\n")
-                 f.write(f"TitleList.Keywords.{ind}=\n")
-                 f.write(f"TitleList.ContextNumber.{ind}=100002{ind}\n")
-                 f.write(f"TitleList.ApplyTemp.{ind}=0\n")
-                 f.write(f"TitleList.Expanded.{ind}=0\n")
-                 f.write(f"TitleList.Kind.{ind}=0\n")
-                 ind=ind+1
+                print(f"{Fore.YELLOW}Process {ind}: {file}")
+                curIndex = file.strip("Article").strip(".html")
+                f.write(f"TitleList.Title.{ind}={curIndex}\n")
+                f.write(f"TitleList.Level.{ind}=1\n")
+                f.write(f"TitleList.Url.{ind}={file}\n")
+                f.write(f"TitleList.Icon.{ind}=0\n")
+                f.write(f"TitleList.Status.{ind}=0\n")
+                f.write(f"TitleList.Keywords.{ind}=\n")
+                f.write(f"TitleList.ContextNumber.{ind}={curIndex}\n")
+                f.write(f"TitleList.ApplyTemp.{ind}=0\n")
+                f.write(f"TitleList.Expanded.{ind}=0\n")
+                f.write(f"TitleList.Kind.{ind}=0\n")
+                ind = ind + 1
 
         f.write(f"TitleList.Title.{ind}=Фиксированная вверху\n")
         f.write(f"TitleList.Level.{ind}=0\n")
@@ -81,6 +77,8 @@ def main():
     shutil.copy(prjFileT, prjFile) # переименовываем временный в основной
     os.remove(prjFileT)  # удаляем основной файл
 
+    print(f'{Fore.CYAN}Process completed, press Space...')
+    keyboard.wait("space")
 
 if __name__ == "__main__":
     print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
