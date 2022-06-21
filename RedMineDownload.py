@@ -28,6 +28,14 @@ def ReadConfig(filepath):
         global glid
         glid = config.has_option("Settings", "id") and config.get("Settings", "id") or None
 
+        global glclear
+        str = config.has_option("Settings", "clear") and config.get("Settings", "clear") or None
+        glclear = False
+
+        if str is not None:
+            if str == '1' or str.lower() == 'true':
+                glclear = True
+
         global logOn
         str = config.has_option("Settings", "logon") and config.get("Settings", "logon") or None
         logOn = False
@@ -45,6 +53,7 @@ def ReadConfig(filepath):
         config.set("Settings", "host", 'http://192.168.1.1')
         config.set("Settings", "apikey", 'dq3inqgnqe8igqngninkkvekmviewrgir9384')
         config.set("Settings", "id", '1677;318;id103/wiki/Help2')
+        config.set("Settings", "clear", 'False')
         config.set("Settings", "logon", 'False')
 
         with open(filepath, "w") as config_file:
@@ -73,6 +82,22 @@ def ClearDescription(description):
     return sresult
 
 
+# Delete inline link (#[digit])
+def ClearRedmineLink(description):
+    sresult = description
+    if glclear and sresult.find('(#') != -1:
+        if logOn:
+            print(f'In: {sresult}')
+        match = re.findall(r'\(\#\d*\)', description)
+        for el in match:
+            print(f'{Fore.GREEN}{el =}')
+            sresult = sresult.replace(el, '')
+
+        if logOn:
+            print(f'Out: {sresult}')
+    return sresult
+
+
 #  Get table and create file
 def ProcessDescription(downloadDirectory, description):
     description = ClearDescription(description)
@@ -90,10 +115,12 @@ def ProcessDescription(downloadDirectory, description):
         rowList = table.xpath(".//tr")  # строки таблицы
         rInd = 0
         isSkip: bool = True
-        headRow ="" #  Заголовок таблицы
+        headRow = ""  # Заголовок таблицы
         for row in rowList:
             rInd = rInd + 1
+
             htmlRow = html.tostring(row, encoding='unicode')
+            htmlRow = ClearRedmineLink(htmlRow)
 
             if logOn:
                 print(f'{Fore.RED}------------------ROW {rInd}------------------------')
