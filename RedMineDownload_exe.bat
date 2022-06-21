@@ -1,4 +1,4 @@
-SET PYNAME=RedMineDownloadToHelp
+SET PYNAME=RedMineDownload
 rmdir /s /q build
 if exist %PYNAME%.exe del %PYNAME%.exe
 if exist *.log del *.log

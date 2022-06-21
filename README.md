@@ -1,10 +1,11 @@
-# I.1 [RedMineDownloadToHelp] Конвертирует Issue и Wiki записи RedMine в Html
+# I.1 [RedMineDownload] Конвертирует Issue и Wiki записи RedMine в Html
 
 1. Настроить **config.cfg** (запустить единожды *.exe для создания шаблона файла)
    1. [host], IP или DNS имя RedMine (например: **http://192.168.1.1**)
    2. [apikey], *RedMine - Моя учетная запись - Ключ доступа к API*, RESTAPI должен быть глобально включен Администратором (например: **aldjfoeiwgj9348gn348**)
    3. [id], список Issue ID и/или страниц Wiki разделенных *";"* (например: **1;2;114;9123** и/или **id100/wiki/Help1;id103/wiki/Help2**)
-   4. Запустить
+   4. [clear], (1 или True) удалить внутренние ссылки формата *(#[цифры])*
+   5. Запустить
 
 ## I.2 Получить ключ API
 
@@ -16,10 +17,11 @@
 host = http://192.168.1.1
 apikey = dq3inqgnqe8igqngninkkvekmviewrgir9384
 id = 1677;318;id100/wiki/Help1
+clear = True
 ```
 
 ## I.4 Результат
-Issue или Wiki должна содержать html таблицу, первый столбец которой является [Help ID].
+Issue или Wiki должна содержать html таблицу, первый столбец первой строки которой [Help ID].
 
 Утилита разбивает строки таблицы содержащие числовое значение [Help ID] на отдельные файлы *"Article[Help ID].htm"* в новом каталоге *Dowload*
 
