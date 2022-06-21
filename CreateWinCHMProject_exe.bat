@@ -7,4 +7,4 @@ pyinstaller -F -i "Icon.ico" %PYNAME%.py
 if exist *.log del *.log
 if exist *.spec del *.spec
 rmdir /s /q build
-Xcopy "Template" "dist" /E /Y
+Xcopy "Template" "dist\Template" /E /Y
