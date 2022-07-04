@@ -1,15 +1,6 @@
-import shutil
-import configparser
 import os
-import re
 from lxml import html
-
-import keyboard
-import requests  # request img from web
-from bs4 import BeautifulSoup
 from colorama import Fore
-from redminelib import Redmine
-
 
 def main():
     print(f'{Fore.CYAN}{currentDirectory=}')
@@ -41,7 +32,5 @@ def main():
 if __name__ == "__main__":
     print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
     print(f"{Fore.CYAN}Create HTML help from Download/Article*.html")
-    global logOn
-    logOn = True
     currentDirectory = os.getcwd()
     main()

@@ -36,13 +36,16 @@ def ReadConfig(filepath):
             if str == '1' or str.lower() == 'true':
                 glclear = True
 
-        global logOn
+        global gllogon
         str = config.has_option("Settings", "logon") and config.get("Settings", "logon") or None
-        logOn = False
+        gllogon = 0
 
-        if str is not None:
-            if str == '1' or str.lower() == 'true':
-                logOn = True
+        if str is None:
+            gllogon = 0
+        if not str.isdigit():
+            gllogon = 0
+        else:
+            gllogon = int(str)
 
         return True
     else:
@@ -54,7 +57,7 @@ def ReadConfig(filepath):
         config.set("Settings", "apikey", 'dq3inqgnqe8igqngninkkvekmviewrgir9384')
         config.set("Settings", "id", '1677;318;id103/wiki/Help2')
         config.set("Settings", "clear", 'False')
-        config.set("Settings", "logon", 'False')
+        config.set("Settings", "logon", '0')
 
         with open(filepath, "w") as config_file:
             config.write(config_file)
@@ -86,15 +89,18 @@ def ClearDescription(description):
 def ClearRedmineLink(description):
     sresult = description
     if glclear and sresult.find('(#') != -1:
-        if logOn:
-            print(f'In: {sresult}')
+        if gllogon == 3:
+            print(f'{Fore.YELLOW}--------------ClearRedmineLink---------------')
+            print(f'{Fore.YELLOW}In: {sresult}')
         match = re.findall(r'\(\#\d*\)', description)
         for el in match:
-            print(f'{Fore.GREEN}{el =}')
+            if gllogon == 3:
+                print(f'{Fore.GREEN}{el =}')
             sresult = sresult.replace(el, '')
 
-        if logOn:
-            print(f'Out: {sresult}')
+        if gllogon == 3:
+            print(f'{Fore.YELLOW}Out: {sresult}')
+            print(f'{Fore.YELLOW}--------------ClearRedmineLink---------------')
     return sresult
 
 
@@ -107,10 +113,11 @@ def ProcessDescription(downloadDirectory, description):
     htmlContent = html.fromstring(description)
     tables = htmlContent.xpath(".//table")  # таблицы документа
     for table in tables:
-        if logOn:
+        if gllogon >= 1:
             htmlTablest = html.tostring(table, encoding='unicode')
-            print(f'{Fore.RED}------------------TABLE------------------------')
-            print(f'{Fore.WHITE}{htmlTablest}')
+            print(f'{Fore.BLUE}------------------TABLE------------------------')
+            if gllogon >= 2:
+                print(f'{Fore.WHITE}{htmlTablest}')
 
         rowList = table.xpath(".//tr")  # строки таблицы
         rInd = 0
@@ -122,9 +129,10 @@ def ProcessDescription(downloadDirectory, description):
             htmlRow = html.tostring(row, encoding='unicode')
             htmlRow = ClearRedmineLink(htmlRow)
 
-            if logOn:
-                print(f'{Fore.RED}------------------ROW {rInd}------------------------')
-                print(f'{Fore.WHITE}{htmlRow}')
+            if gllogon >= 1:
+                print(f'{Fore.BLUE}------------------ROW {rInd}------------------------')
+                if gllogon >= 2:
+                    print(f'{Fore.WHITE}{htmlRow}')
 
             colList = row.xpath(".//th")  # все столбцы строки
             if len(colList) == 0:
@@ -136,40 +144,58 @@ def ProcessDescription(downloadDirectory, description):
                 Article = Article.strip('\n')
                 Article = Article.strip('\r')
                 Article = Article.strip('\t')
-                if logOn:
-                    print(f'{Article=}')
+                if gllogon >= 2:
+                    print(f'{Fore.WHITE}{Article=}')
 
             # 2 Проверка шапки таблицы на наличие в первом столбце HelpID
             if rInd == 1:
-                if logOn:
-                    print(f'{Article}')
+                if gllogon:
+                    print(f'{Fore.WHITE}Первая строка, первый столбец: {Article=}')
                 if Article.find("HelpID") > 0:
                     isSkip = False
                     headRow = htmlRow
             if isSkip:
-                print(f'{Fore.RED}Первый солбец перой строки не HelpID')
+                print(f'{Fore.RED}Первый столбец первой строки не HelpID')
                 break
 
             # 3 Разбиваем таблицу построчно по наличию HelpID и записываем в файл
             if rInd > 1:
+                FindIDArticle = ClearDescription(Article)
+                ttd = re.findall('<.+?>', FindIDArticle)  # убираем <td>
+                if len(ttd) < 2:
+                    print(f'{Fore.RED}{FindIDArticle} не столбец, отсутствует <td>...</td>')
+                    Article = ""
+                else:
+                    if gllogon >= 2:
+                        print(f'Del ({ttd[0]}; {ttd[(len(ttd) - 1)]})')
+                    FindIDArticle = ClearDescription(FindIDArticle.lstrip(ttd[0]).rstrip(ttd[(len(ttd) - 1)]))
+                    Article = FindIDArticle
+                    if gllogon >= 2:
+                        print(f'{FindIDArticle=}')
+
+                # Article = Article.replace()
                 dgt = re.findall('(\d+)', Article)
-                ArticleId = ""
+                ArticleId = Article
                 if len(dgt) > 0:
                     ArticleId = dgt[0]
-                    if logOn:
+                    if gllogon >= 1:
                         print(f'{ArticleId=}')
                 if ArticleId.isdigit():
-                    ArticleFle = f'Article{ArticleId}.html'
-                    content = f'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n'
-                    content = f'{content}\n<head><title>{ArticleId}</title>\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n</head>'
-                    content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
-                    content = f'{content}\n<table width="80%">\n<tbody>\n{headRow}\n{htmlRow}\n</tbody>\n</table>\n'
-                    content = f'{content}\n</body>\n</html>'
-                    content = ClearDescription(content)
-                    exportFileName = os.path.join(downloadDirectory, ArticleFle)
-                    WriteHtml(content, exportFileName)
+                    Id = int(ArticleId)
+                    if Id > 99999:
+                        ArticleFle = f'Article{ArticleId}.html'
+                        content = f'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n'
+                        content = f'{content}\n<head><title>{ArticleId}</title>\n<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n</head>'
+                        content = f'{content}\n<style>table, th, td {{border: 1px solid black; border-collapse: collapse;}}</style>\n<body>'
+                        content = f'{content}\n<table width="80%">\n<tbody>\n{headRow}\n{htmlRow}\n</tbody>\n</table>\n'
+                        content = f'{content}\n</body>\n</html>'
+                        content = ClearDescription(content)
+                        exportFileName = os.path.join(downloadDirectory, ArticleFle)
+                        WriteHtml(content, exportFileName)
+                    else:
+                        print(f'{Fore.RED}HelpID меньше 999999, ({Id})')
                 else:
-                    print(f'{Fore.RED}HelpID не число, ({Article})')
+                    print(f'{Fore.RED}HelpID не число, ({ArticleId})')
 
 
 def main():
@@ -177,6 +203,7 @@ def main():
     print(f'{Fore.CYAN}{glhost=}')
     print(f'{Fore.CYAN}{glapikey=}')
     print(f'{Fore.CYAN}{currentDirectory=}')
+    print(f'{Fore.CYAN}{gllogon=}')
 
     downloadDirectory = os.path.join(currentDirectory, "Dowload")
     if not os.path.exists(downloadDirectory):
@@ -221,7 +248,7 @@ def main():
 
 
 if __name__ == "__main__":
-    print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
+    print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 07.2022")
     print(f"{Fore.CYAN}Convert table to *.html")
 
     currentDirectory = os.getcwd()

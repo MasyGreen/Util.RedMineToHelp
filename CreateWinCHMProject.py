@@ -83,7 +83,5 @@ def main():
 if __name__ == "__main__":
     print(f"{Fore.CYAN}Last update: Cherepanov Maxim masygreen@gmail.com (c), 06.2022")
     print(f"{Fore.CYAN}Create WinCHM project from Download/Article*.html")
-    global logOn
-    logOn = True
     currentDirectory = os.getcwd()
     main()
