@@ -8,7 +8,7 @@ import requests  # request img from web
 from bs4 import BeautifulSoup
 from colorama import Fore
 from redminelib import Redmine
-
+# pip name Python-Redmine
 
 # Read config
 def ReadConfig(filepath):
