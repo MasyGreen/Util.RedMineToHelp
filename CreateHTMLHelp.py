@@ -11,7 +11,12 @@ def main():
         print(f'{Fore.RED}Folder {projectDirectory} not found')
         exit(0)
 
-    hlpFile = os.path.join(projectDirectory, "help.htm")
+    helpFileFolder = os.path.join(currentDirectory, "HelpCHM")
+    if not os.path.exists(helpFileFolder):
+        os.mkdir(helpFileFolder)
+    print(f'{Fore.CYAN}{helpFileFolder=}')
+
+    hlpFile = os.path.join(helpFileFolder, "help.htm")
     with open(hlpFile, 'w', encoding='utf-8') as wf:
         wf.write(f'<html>\n')
         for file in os.listdir(projectDirectory):
