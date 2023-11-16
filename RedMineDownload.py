@@ -222,10 +222,14 @@ def main():
                 print(f'Get RedMine Issue Description: {curId=}')
 
                 # 1 Get RedMine Issue Description
-                issue = redmine.issue.get(curId, include=[])
+                issue = redmine.issue.get(curId, include=['watchers'])
                 issueDescription = issue.description
                 ProcessDescription(downloadDirectory, issueDescription)
 
+                print(f'Количество наблюдателей = {len(issue.watchers)}')
+                for user in issue.watchers:
+                    usr = redmine.user.get(user.id)
+                    print(f'{user} = {usr.mail}')
             else:
                 print(f'Get RedMine Wiki Description: {curId=}')
 
