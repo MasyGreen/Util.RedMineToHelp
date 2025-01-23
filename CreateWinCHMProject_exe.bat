@@ -14,3 +14,5 @@ rem set request xcopy as D
 echo D | xcopy "Template" "dist\Template" /e /c /f /y /r
 if exist "dist\DeleteTmpFolder.bat" del "dist\DeleteTmpFolder.bat"
 copy DeleteTmpFolder.bat "dist\DeleteTmpFolder.bat"
+if exist "dist\4_CreateCHMHelp.bat" del "dist\4_CreateCHMHelp.bat"
+copy 4_CreateCHMHelp.bat "dist\4_CreateCHMHelp.bat"
