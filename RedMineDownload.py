@@ -204,7 +204,12 @@ def process_description(download_directory, description):
                     dgt = re.findall('(\d+)', article)
                     article_id = article
                     if len(dgt) > 0:
+                        # Some value can be color or another digit - get only >= 99999
                         article_id = dgt[0]
+                        for dg in dgt:
+                            if int(dg) > 99999:
+                                article_id = dg
+
                         if settings_logon_level >= 1:
                             print(f'{article_id=}')
                     if article_id.isdigit():
@@ -220,7 +225,7 @@ def process_description(download_directory, description):
                             export_file_name = os.path.join(download_directory, article_fle)
                             write_html(content, export_file_name)
                         else:
-                            print(f'{Fore.RED}HelpID меньше 999999, ({Id})')
+                            print(f'{Fore.RED}HelpID меньше 99999, ({Id})')
                     else:
                         print(f'{Fore.RED}HelpID не число, ({article_id})')
 
